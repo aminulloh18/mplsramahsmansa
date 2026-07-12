@@ -1161,3 +1161,4 @@ export default function LandingPage({ onGoToLogin }: LandingPageProps) {
     </div>
   );
 }
+
