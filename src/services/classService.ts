@@ -12,11 +12,37 @@ export const classService = {
           teacher:teachers(*)
         `);
 
-      if (error) {
-        console.warn('Supabase getClasses error:', error);
+      if (!error && data) {
+        return data as Class[];
+      }
+
+      console.warn('Supabase getClasses error, trying robust JS-join fallback:', error);
+      
+      try {
+        const { data: classesData, error: cErr } = await supabase
+          .from('classes')
+          .select('*');
+
+        if (cErr) throw cErr;
+
+        if (classesData) {
+          const { data: teachersData } = await supabase
+            .from('teachers')
+            .select('*');
+
+          const teachersMap = new Map((teachersData || []).map(t => [t.id, t]));
+          
+          const mappedClasses = classesData.map(cls => ({
+            ...cls,
+            teacher: cls.teacher_id ? teachersMap.get(cls.teacher_id) || null : null
+          }));
+
+          return mappedClasses as Class[];
+        }
+      } catch (fallbackErr) {
+        console.warn('Supabase fallback getClasses also failed:', fallbackErr);
         return localDb.getClasses();
       }
-      return data as Class[];
     }
     return localDb.getClasses();
   },

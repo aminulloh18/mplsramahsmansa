@@ -16,11 +16,41 @@ export const studentService = {
         `)
         .is('deleted_at', null);
 
-      if (error) {
-        console.warn('Supabase getStudents error:', error);
+      if (!error && data) {
+        return data as Student[];
+      }
+
+      console.warn('Supabase getStudents error, trying robust JS-join fallback:', error);
+
+      try {
+        const { data: studentsData, error: sErr } = await supabase
+          .from('students')
+          .select('*')
+          .is('deleted_at', null);
+
+        if (sErr) throw sErr;
+
+        if (studentsData) {
+          const { data: classesData } = await supabase.from('classes').select('*');
+          const { data: teachersData } = await supabase.from('teachers').select('*');
+
+          const teachersMap = new Map((teachersData || []).map(t => [t.id, t]));
+          const classesMap = new Map((classesData || []).map(c => {
+            const teacher = c.teacher_id ? teachersMap.get(c.teacher_id) || null : null;
+            return [c.id, { ...c, teacher }];
+          }));
+
+          const mappedStudents = studentsData.map(student => ({
+            ...student,
+            class: student.class_id ? classesMap.get(student.class_id) || null : null
+          }));
+
+          return mappedStudents as Student[];
+        }
+      } catch (fallbackErr) {
+        console.error('Supabase fallback getStudents failed entirely:', fallbackErr);
         return localDb.getStudents();
       }
-      return data as Student[];
     }
     return localDb.getStudents();
   },
@@ -41,11 +71,50 @@ export const studentService = {
         .is('deleted_at', null)
         .maybeSingle();
 
-      if (error) {
-        console.warn('Supabase searchStudent error:', error);
+      if (!error) {
+        return data as Student | null;
+      }
+
+      console.warn('Supabase searchStudent error, trying robust JS fallback:', error);
+
+      try {
+        const { data: studentData, error: sErr } = await supabase
+          .from('students')
+          .select('*')
+          .eq('registration_number', term)
+          .is('deleted_at', null)
+          .maybeSingle();
+
+        if (sErr) throw sErr;
+        if (!studentData) return null;
+
+        let classObj = null;
+        if (studentData.class_id) {
+          const { data: classData } = await supabase
+            .from('classes')
+            .select('*')
+            .eq('id', studentData.class_id)
+            .maybeSingle();
+
+          if (classData) {
+            let teacherObj = null;
+            if (classData.teacher_id) {
+              const { data: teacherData } = await supabase
+                .from('teachers')
+                .select('*')
+                .eq('id', classData.teacher_id)
+                .maybeSingle();
+              teacherObj = teacherData || null;
+            }
+            classObj = { ...classData, teacher: teacherObj };
+          }
+        }
+
+        return { ...studentData, class: classObj } as Student;
+      } catch (fallbackErr) {
+        console.error('Supabase searchStudent fallback failed:', fallbackErr);
         return this.searchStudentLocal(term);
       }
-      return data;
     }
     return this.searchStudentLocal(term);
   },
@@ -75,11 +144,50 @@ export const studentService = {
         .is('deleted_at', null)
         .maybeSingle();
 
-      if (error) {
-        console.warn('Supabase searchStudentByNisn error:', error);
+      if (!error) {
+        return data as Student | null;
+      }
+
+      console.warn('Supabase searchStudentByNisn error, trying robust JS fallback:', error);
+
+      try {
+        const { data: studentData, error: sErr } = await supabase
+          .from('students')
+          .select('*')
+          .eq('nisn', sanitizedNisn)
+          .is('deleted_at', null)
+          .maybeSingle();
+
+        if (sErr) throw sErr;
+        if (!studentData) return null;
+
+        let classObj = null;
+        if (studentData.class_id) {
+          const { data: classData } = await supabase
+            .from('classes')
+            .select('*')
+            .eq('id', studentData.class_id)
+            .maybeSingle();
+
+          if (classData) {
+            let teacherObj = null;
+            if (classData.teacher_id) {
+              const { data: teacherData } = await supabase
+                .from('teachers')
+                .select('*')
+                .eq('id', classData.teacher_id)
+                .maybeSingle();
+              teacherObj = teacherData || null;
+            }
+            classObj = { ...classData, teacher: teacherObj };
+          }
+        }
+
+        return { ...studentData, class: classObj } as Student;
+      } catch (fallbackErr) {
+        console.error('Supabase searchStudentByNisn fallback failed:', fallbackErr);
         return this.searchStudentByNisnLocal(sanitizedNisn);
       }
-      return data;
     }
     return this.searchStudentByNisnLocal(sanitizedNisn);
   },
