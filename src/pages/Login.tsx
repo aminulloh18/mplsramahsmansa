@@ -200,22 +200,6 @@ export default function Login({ onLoginSuccess, onGoBack }: LoginProps) {
               )}
             </button>
           </form>
-
-          {/* Quick Info Box */}
-          <div className="mt-8 pt-6 border-t border-slate-800/60 text-[11px] text-slate-500 space-y-1.5 leading-relaxed">
-            <p className="font-bold text-slate-400">Petunjuk Simulasi Sandbox:</p>
-            {loginMode === 'admin' ? (
-              <>
-                <p>1. Masukkan email panitia apa saja (contoh: <code className="text-blue-400 font-mono">aminulloh18@gmail.com</code> atau <code className="text-blue-400 font-mono">admin@sman1bdg.sch.id</code>).</p>
-                <p>2. Gunakan kata sandi simulasi: <code className="text-blue-400 font-mono">admin</code> atau <code className="text-blue-400 font-mono">123456</code>.</p>
-              </>
-            ) : (
-              <>
-                <p>1. Gunakan No HP Pendamping dari data kelas yang ada, contoh: <code className="text-emerald-400 font-mono">081234567890</code> (Farhan) atau <code className="text-emerald-400 font-mono">081298765432</code> (Nabila).</p>
-                <p>2. Tekan tombol <strong className="text-slate-300">MASUK SEBAGAI BINKEL</strong> untuk langsung mengakses panel presensi & kebugaran kelas tersebut.</p>
-              </>
-            )}
-          </div>
         </motion.div>
       </div>
     </div>
