@@ -170,7 +170,7 @@ export default function LandingPage({ onGoToLogin }: LandingPageProps) {
         if (activeTab === 'reg') {
           result = await studentService.searchStudent(regInput);
         } else {
-          result = await studentService.searchStudentByNisnAndDob(nisnInput, dobInput);
+          result = await studentService.searchStudentByNisn(nisnInput);
         }
         setSearchResult(result);
       } catch (error) {
@@ -573,7 +573,7 @@ export default function LandingPage({ onGoToLogin }: LandingPageProps) {
               <h2 className="text-xl font-bold text-white">Cek Pembagian Kelas Anda</h2>
             </div>
             <p className="text-xs text-slate-400 mb-6">
-              Masukkan Nomor Pendaftaran (format: <code className="text-blue-400 font-mono">MPLS-2026-001</code>) atau kombinasikan NISN dan Tanggal Lahir untuk memverifikasi alokasi kelas Anda.
+              Masukkan Nomor Pendaftaran (format: <code className="text-blue-400 font-mono">MPLS-2026-001</code>) atau Nomor NISN untuk memverifikasi alokasi regu & kelas Anda.
             </p>
 
             {/* TAB SELECTOR */}
@@ -598,7 +598,7 @@ export default function LandingPage({ onGoToLogin }: LandingPageProps) {
                     : 'text-slate-400 hover:text-slate-200'
                 }`}
               >
-                NISN & Tanggal Lahir
+                Nomor NISN
               </button>
             </div>
 
@@ -622,11 +622,11 @@ export default function LandingPage({ onGoToLogin }: LandingPageProps) {
                   </div>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-xs font-bold text-slate-400 mb-2">
-                      NISN (10 Digit)
-                    </label>
+                <div>
+                  <label className="block text-xs font-bold text-slate-400 mb-2">
+                    NISN Siswa (10 Digit)
+                  </label>
+                  <div className="relative">
                     <input
                       type="text"
                       required
@@ -634,20 +634,9 @@ export default function LandingPage({ onGoToLogin }: LandingPageProps) {
                       placeholder="Contoh: 0098765431"
                       value={nisnInput}
                       onChange={(e) => setNisnInput(e.target.value.replace(/\D/g, ''))}
-                      className="w-full bg-slate-950/80 border border-slate-800 rounded-xl px-4 py-3 text-sm text-white placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                      className="w-full bg-slate-950/80 border border-slate-800 rounded-xl px-4 py-3 pl-11 text-sm text-white placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
                     />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-bold text-slate-400 mb-2">
-                      Tanggal Lahir
-                    </label>
-                    <input
-                      type="date"
-                      required
-                      value={dobInput}
-                      onChange={(e) => setDobInput(e.target.value)}
-                      className="w-full bg-slate-950/80 border border-slate-800 rounded-xl px-4 py-3 text-sm text-white placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
-                    />
+                    <Search className="w-4 h-4 text-slate-600 absolute left-4 top-3.5" />
                   </div>
                 </div>
               )}
@@ -1001,7 +990,7 @@ export default function LandingPage({ onGoToLogin }: LandingPageProps) {
               <h3 className="text-lg font-bold text-white mb-2">Data Tidak Ditemukan</h3>
               <p className="text-xs text-slate-400 leading-relaxed mb-6">
                 Maaf, pencarian dengan informasi yang Anda masukkan tidak menghasilkan data pembagian kelas.
-                Harap periksa kembali penulisan <strong>Nomor Pendaftaran</strong> atau kecocokan <strong>NISN dan Tanggal Lahir</strong> Anda.
+                Harap periksa kembali penulisan <strong>Nomor Pendaftaran</strong> atau <strong>NISN</strong> Anda.
               </p>
               
               <div className="flex flex-col sm:flex-row gap-3 justify-center">
