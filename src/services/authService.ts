@@ -1,5 +1,6 @@
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import { localDb } from './localDb';
+import { classService } from './classService';
 
 export interface UserSession {
   id?: string;
@@ -119,22 +120,56 @@ export const authService = {
   },
 
   async loginBinkel(phone: string): Promise<UserSession> {
+    const normalizePhone = (p: string) => {
+      let cleaned = p.replace(/[^0-9]/g, '');
+      if (cleaned.startsWith('62')) {
+        cleaned = '0' + cleaned.slice(2);
+      }
+      if (cleaned.startsWith('8')) {
+        cleaned = '0' + cleaned;
+      }
+      return cleaned;
+    };
+
     const cleanPhone = phone.trim().replace(/[^0-9]/g, '');
+    const normalizedInput = normalizePhone(phone);
+    
     if (!cleanPhone) {
       throw new Error('Nomor HP tidak boleh kosong.');
     }
-    const classes = localDb.getClasses();
     
-    // Find class with this binkel phone (either matching exactly or suffix match to handle 0 vs 62)
+    console.log('--- PROSES LOGIN BINKEL ---');
+    console.log('Supabase Terkonfigurasi:', isSupabaseConfigured);
+    console.log('Input HP Asli:', phone);
+    console.log('Input HP Clean:', cleanPhone);
+    console.log('Input HP Normalisasi:', normalizedInput);
+
+    const classes = await classService.getClasses();
+    console.log('Total Kelas Ditemukan:', classes.length);
+    console.log('Daftar Kelas & HP Binkel dari DB:', classes.map(c => ({
+      name: c.name,
+      binkel_name: c.binkel_name,
+      binkel_phone_raw: c.binkel_phone,
+      binkel_phone_normalized: c.binkel_phone ? normalizePhone(c.binkel_phone) : null
+    })));
+    
+    // Find class with this binkel phone using normalized comparison or suffix match
     const matchingClass = classes.find(c => {
       if (!c.binkel_phone) return false;
-      const sanitizedClassPhone = c.binkel_phone.replace(/[^0-9]/g, '');
-      return sanitizedClassPhone.endsWith(cleanPhone) || cleanPhone.endsWith(sanitizedClassPhone);
+      const normalizedClassPhone = normalizePhone(c.binkel_phone);
+      
+      const matchNormalized = normalizedClassPhone === normalizedInput;
+      const matchSuffix = normalizedClassPhone.endsWith(cleanPhone) || cleanPhone.endsWith(normalizedClassPhone);
+      
+      return matchNormalized || matchSuffix;
     });
 
     if (!matchingClass) {
+      console.warn('❌ LOGIN GAGAL: Tidak ada kelas yang cocok untuk nomor:', phone);
       throw new Error('Nomor HP Pendamping (Binkel) tidak terdaftar di kelas manapun. Silakan hubungi Administrator.');
     }
+
+    console.log('✅ LOGIN BERHASIL: Menemukan Kelas:', matchingClass.name, 'untuk Binkel:', matchingClass.binkel_name);
 
     const sessionObj: UserSession = {
       email: `${cleanPhone}@binkel.mpls`,
