@@ -33,8 +33,28 @@ export default function AnalisisKebugaran({ adminEmail }: AnalisisKebugaranProps
   const [selectedClass, setSelectedClass] = useState('all');
   const [selectedImtStatus, setSelectedImtStatus] = useState('all');
   const [selectedAttendance, setSelectedAttendance] = useState('all');
+  const [activeDay, setActiveDay] = useState<string>('1'); // '1', '2', '3', '4', '5'
 
   const [activeSubTab, setActiveSubTab] = useState<'analisis' | 'data'>('analisis');
+
+  // Get attendance status of student on a specific day
+  const getAttendanceForDay = (student: Student, day: string) => {
+    if (!student.attendance_history) {
+      if (day === '1' && student.attendance_status) {
+        return student.attendance_status;
+      }
+      return null;
+    }
+    try {
+      const history = JSON.parse(student.attendance_history);
+      return history[day] || null;
+    } catch (e) {
+      if (day === '1' && student.attendance_status) {
+        return student.attendance_status;
+      }
+      return null;
+    }
+  };
 
   useEffect(() => {
     async function loadData() {
@@ -71,7 +91,7 @@ export default function AnalisisKebugaran({ adminEmail }: AnalisisKebugaranProps
 
     // Attendance filter
     const matchesAttendance = selectedAttendance === 'all' || 
-      (selectedAttendance === 'Belum' ? !s.attendance_status : s.attendance_status === selectedAttendance);
+      (selectedAttendance === 'Belum' ? !getAttendanceForDay(s, activeDay) : getAttendanceForDay(s, activeDay) === selectedAttendance);
 
     return matchesSearch && matchesClass && matchesImt && matchesAttendance;
   });
@@ -92,12 +112,12 @@ export default function AnalisisKebugaran({ adminEmail }: AnalisisKebugaranProps
     return totalWithFitness > 0 ? Math.round((count / totalWithFitness) * 100) : 0;
   };
 
-  // Attendance Breakdowns
-  const attHadir = students.filter(s => s.attendance_status === 'Hadir').length;
-  const attSakit = students.filter(s => s.attendance_status === 'Sakit').length;
-  const attIzin = students.filter(s => s.attendance_status === 'Izin').length;
-  const attAlpa = students.filter(s => s.attendance_status === 'Alpa').length;
-  const attBelum = students.filter(s => !s.attendance_status).length;
+  // Attendance Breakdowns based on activeDay
+  const attHadir = students.filter(s => getAttendanceForDay(s, activeDay) === 'Hadir').length;
+  const attSakit = students.filter(s => getAttendanceForDay(s, activeDay) === 'Sakit').length;
+  const attIzin = students.filter(s => getAttendanceForDay(s, activeDay) === 'Izin').length;
+  const attAlpa = students.filter(s => getAttendanceForDay(s, activeDay) === 'Alpa').length;
+  const attBelum = students.filter(s => !getAttendanceForDay(s, activeDay)).length;
 
   const getAttPct = (count: number) => {
     return totalSiswa > 0 ? Math.round((count / totalSiswa) * 100) : 0;
@@ -144,7 +164,11 @@ export default function AnalisisKebugaran({ adminEmail }: AnalisisKebugaranProps
       'NISN': s.nisn || '-',
       'Jenis Kelamin': s.gender === 'L' ? 'Laki-laki' : 'Perempuan',
       'Kelas': s.class?.name || 'Belum Ditentukan',
-      'Presensi Kehadiran': s.attendance_status || 'Belum Diisi',
+      'Presensi H1': getAttendanceForDay(s, '1') || '-',
+      'Presensi H2': getAttendanceForDay(s, '2') || '-',
+      'Presensi H3': getAttendanceForDay(s, '3') || '-',
+      'Presensi H4': getAttendanceForDay(s, '4') || '-',
+      'Presensi H5': getAttendanceForDay(s, '5') || '-',
       'Tinggi Badan (cm)': s.tb || '-',
       'Berat Badan (kg)': s.bb || '-',
       'Denyut Jantung (bpm)': s.heart_rate || '-',
@@ -165,7 +189,11 @@ export default function AnalisisKebugaran({ adminEmail }: AnalisisKebugaranProps
       { wch: 12 },
       { wch: 15 },
       { wch: 18 },
-      { wch: 18 },
+      { wch: 12 },
+      { wch: 12 },
+      { wch: 12 },
+      { wch: 12 },
+      { wch: 12 },
       { wch: 18 },
       { wch: 18 },
       { wch: 20 },
@@ -446,6 +474,31 @@ export default function AnalisisKebugaran({ adminEmail }: AnalisisKebugaranProps
             </button>
           </div>
 
+          {/* Day selection tabs */}
+          <div className="flex flex-wrap items-center gap-2 p-1 bg-slate-950 rounded-2xl border border-slate-900 mb-4">
+            <div className="px-3 py-1 text-[10px] font-black text-slate-500 uppercase tracking-wider">
+              Hari MPLS (Filter Data Presensi):
+            </div>
+            {(['1', '2', '3', '4', '5'] as const).map((day) => {
+              const isSelected = activeDay === day;
+              return (
+                <button
+                  key={day}
+                  type="button"
+                  onClick={() => setActiveDay(day)}
+                  className={`px-4 py-2 text-xs font-bold rounded-xl transition-all cursor-pointer flex items-center gap-1.5 ${
+                    isSelected
+                      ? 'bg-blue-600 text-white shadow shadow-blue-500/10'
+                      : 'text-slate-400 hover:text-slate-200'
+                  }`}
+                >
+                  <span>Hari {day}</span>
+                  {isSelected && <span className="w-1.5 h-1.5 rounded-full bg-white block animate-pulse" />}
+                </button>
+              );
+            })}
+          </div>
+
           {/* Filters Row */}
           <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
             {/* Search */}
@@ -529,11 +582,12 @@ export default function AnalisisKebugaran({ adminEmail }: AnalisisKebugaranProps
                 </thead>
                 <tbody className="divide-y divide-slate-800/50">
                   {filteredStudents.map((s) => {
+                    const statusVal = getAttendanceForDay(s, activeDay);
                     let attBadge = 'bg-slate-900 text-slate-400 border-slate-800';
-                    if (s.attendance_status === 'Hadir') attBadge = 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20';
-                    if (s.attendance_status === 'Sakit') attBadge = 'bg-sky-500/10 text-sky-400 border-sky-500/20';
-                    if (s.attendance_status === 'Izin') attBadge = 'bg-amber-500/10 text-amber-400 border-amber-500/20';
-                    if (s.attendance_status === 'Alpa') attBadge = 'bg-rose-500/10 text-rose-400 border-rose-500/20';
+                    if (statusVal === 'Hadir') attBadge = 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20';
+                    if (statusVal === 'Sakit') attBadge = 'bg-sky-500/10 text-sky-400 border-sky-500/20';
+                    if (statusVal === 'Izin') attBadge = 'bg-amber-500/10 text-amber-400 border-amber-500/20';
+                    if (statusVal === 'Alpa') attBadge = 'bg-rose-500/10 text-rose-400 border-rose-500/20';
 
                     return (
                       <tr key={s.id} className="hover:bg-slate-900/20 transition-colors text-xs text-slate-300">
@@ -554,7 +608,7 @@ export default function AnalisisKebugaran({ adminEmail }: AnalisisKebugaranProps
                         {/* Kehadiran */}
                         <td className="py-3.5 text-center">
                           <span className={`px-2 py-1 border text-[10px] font-bold rounded-lg ${attBadge}`}>
-                            {s.attendance_status || 'Belum Input'}
+                            {statusVal || 'Belum Input'}
                           </span>
                         </td>
 

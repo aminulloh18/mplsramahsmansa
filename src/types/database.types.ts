@@ -54,6 +54,7 @@ export interface Student {
   notes?: string;
   photo_url?: string;
   attendance_status?: 'Hadir' | 'Sakit' | 'Izin' | 'Alpa' | null;
+  attendance_history?: string | null; // JSON string mapping day key to status, e.g. {"1":"Hadir","2":"Sakit"}
   tb?: number | null;
   bb?: number | null;
   heart_rate?: number | null;

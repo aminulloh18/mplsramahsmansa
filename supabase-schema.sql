@@ -69,6 +69,7 @@ CREATE TABLE public.students (
     notes TEXT,
     photo_url TEXT,
     attendance_status TEXT CHECK (attendance_status IN ('Hadir', 'Sakit', 'Izin', 'Alpa')),
+    attendance_history TEXT, -- Store JSON-stringified daily attendance, e.g. {"1":"Hadir","2":"Sakit"}
     tb NUMERIC,
     bb NUMERIC,
     heart_rate INTEGER,
@@ -104,6 +105,7 @@ CREATE TABLE public.faq (
 );
 
 -- ALTER TABLE MIGRATION QUERIES FOR EXISTING DATABASES (Run these in your Supabase SQL Editor if you already have the settings table):
+-- ALTER TABLE public.students ADD COLUMN IF NOT EXISTS attendance_history TEXT;
 -- ALTER TABLE public.settings ADD COLUMN IF NOT EXISTS certificate_name_x NUMERIC DEFAULT 50;
 -- ALTER TABLE public.settings ADD COLUMN IF NOT EXISTS certificate_name_y NUMERIC DEFAULT 42;
 -- ALTER TABLE public.settings ADD COLUMN IF NOT EXISTS certificate_name_size NUMERIC DEFAULT 48;

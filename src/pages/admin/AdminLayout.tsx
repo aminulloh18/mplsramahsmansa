@@ -37,8 +37,7 @@ export default function AdminLayout({
   // Sidebar Menu Items Definition
   const menuItems = session.role === 'Binkel'
     ? [
-        { id: 'binkel-dashboard', label: 'Presensi & Kebugaran', icon: Users },
-        { id: 'profile', label: 'Profil Sesi', icon: UserCheck }
+        { id: 'binkel-dashboard', label: 'Presensi & Kebugaran', icon: Users }
       ]
     : [
         { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },

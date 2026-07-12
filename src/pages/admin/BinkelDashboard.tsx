@@ -33,6 +33,7 @@ export default function BinkelDashboard({ session, onLogout }: BinkelDashboardPr
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [classDetail, setClassDetail] = useState<Class | null>(null);
+  const [activeDay, setActiveDay] = useState<string>('1'); // '1', '2', '3', '4', '5'
 
   // Modal State for Fitness Assessment
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -108,19 +109,70 @@ export default function BinkelDashboard({ session, onLogout }: BinkelDashboardPr
     }
   }, [tb, bb]);
 
-  // Handle live Attendance Status update
+  // Get attendance status of student on a specific day
+  const getAttendanceForDay = (student: Student, day: string) => {
+    if (!student.attendance_history) {
+      if (day === '1' && student.attendance_status) {
+        return student.attendance_status;
+      }
+      return null;
+    }
+    try {
+      const history = JSON.parse(student.attendance_history);
+      return history[day] || null;
+    } catch (e) {
+      if (day === '1' && student.attendance_status) {
+        return student.attendance_status;
+      }
+      return null;
+    }
+  };
+
+  // Handle live Attendance Status update for multiple days of MPLS
   const handleAttendanceChange = async (studentId: string, status: 'Hadir' | 'Sakit' | 'Izin' | 'Alpa' | null) => {
     try {
       // Find current student object
       const currentStudent = students.find(s => s.id === studentId);
       if (!currentStudent) return;
 
+      let historyObj: Record<string, string> = {};
+      if (currentStudent.attendance_history) {
+        try {
+          historyObj = JSON.parse(currentStudent.attendance_history);
+        } catch (e) {
+          // ignore
+        }
+      }
+      if (!currentStudent.attendance_history && currentStudent.attendance_status) {
+        historyObj['1'] = currentStudent.attendance_status;
+      }
+
+      if (status) {
+        historyObj[activeDay] = status;
+      } else {
+        delete historyObj[activeDay];
+      }
+
+      const newHistoryStr = JSON.stringify(historyObj);
+      const primaryStatus = (historyObj['1'] || null) as 'Hadir' | 'Sakit' | 'Izin' | 'Alpa' | null;
+
       // Update in state locally for instant feedback
-      setStudents(prev => prev.map(s => s.id === studentId ? { ...s, attendance_status: status } : s));
+      setStudents(prev => prev.map(s => s.id === studentId ? { 
+        ...s, 
+        attendance_history: newHistoryStr,
+        attendance_status: primaryStatus 
+      } : s));
 
       // Call service to update
-      await studentService.updateStudent(studentId, { attendance_status: status }, session.email);
-      showToast(`Berhasil memperbarui presensi ${currentStudent.full_name}.`);
+      await studentService.updateStudent(
+        studentId, 
+        { 
+          attendance_history: newHistoryStr,
+          attendance_status: primaryStatus 
+        }, 
+        session.email
+      );
+      showToast(`Berhasil memperbarui presensi ${currentStudent.full_name} Hari ${activeDay}.`);
     } catch (err) {
       console.error('Gagal memperbarui presensi:', err);
       alert('Gagal menyimpan perubahan presensi.');
@@ -200,13 +252,13 @@ export default function BinkelDashboard({ session, onLogout }: BinkelDashboardPr
     );
   });
 
-  // Calculate Attendance Stats for display
+  // Calculate Attendance Stats for display based on selected activeDay
   const totalStudents = students.length;
-  const attendedCount = students.filter(s => s.attendance_status === 'Hadir').length;
-  const sickCount = students.filter(s => s.attendance_status === 'Sakit').length;
-  const permissionCount = students.filter(s => s.attendance_status === 'Izin').length;
-  const alphaCount = students.filter(s => s.attendance_status === 'Alpa').length;
-  const notFilledCount = students.filter(s => !s.attendance_status).length;
+  const attendedCount = students.filter(s => getAttendanceForDay(s, activeDay) === 'Hadir').length;
+  const sickCount = students.filter(s => getAttendanceForDay(s, activeDay) === 'Sakit').length;
+  const permissionCount = students.filter(s => getAttendanceForDay(s, activeDay) === 'Izin').length;
+  const alphaCount = students.filter(s => getAttendanceForDay(s, activeDay) === 'Alpa').length;
+  const notFilledCount = students.filter(s => !getAttendanceForDay(s, activeDay)).length;
 
   const fitnessCompletedCount = students.filter(s => s.tb && s.bb).length;
 
@@ -349,6 +401,31 @@ export default function BinkelDashboard({ session, onLogout }: BinkelDashboardPr
           </div>
         </div>
 
+        {/* Day selection tabs */}
+        <div className="flex flex-wrap items-center gap-2 p-1 bg-slate-950 rounded-2xl border border-slate-900">
+          <div className="px-3 py-1 text-[10px] font-black text-slate-500 uppercase tracking-wider">
+            Hari MPLS:
+          </div>
+          {(['1', '2', '3', '4', '5'] as const).map((day) => {
+            const isSelected = activeDay === day;
+            return (
+              <button
+                key={day}
+                type="button"
+                onClick={() => setActiveDay(day)}
+                className={`px-4 py-2 text-xs font-bold rounded-xl transition-all cursor-pointer flex items-center gap-1.5 ${
+                  isSelected
+                    ? 'bg-emerald-600 text-white shadow shadow-emerald-500/10'
+                    : 'text-slate-400 hover:text-slate-200'
+                }`}
+              >
+                <span>Hari {day}</span>
+                {isSelected && <span className="w-1.5 h-1.5 rounded-full bg-white block animate-pulse" />}
+              </button>
+            );
+          })}
+        </div>
+
         {/* Interactive list table */}
         {loading ? (
           <div className="space-y-3 py-6">
@@ -396,7 +473,7 @@ export default function BinkelDashboard({ session, onLogout }: BinkelDashboardPr
                       <td className="py-4">
                         <div className="flex items-center justify-center gap-1">
                           {(['Hadir', 'Sakit', 'Izin', 'Alpa'] as const).map((status) => {
-                            const isSelected = student.attendance_status === status;
+                            const isSelected = getAttendanceForDay(student, activeDay) === status;
                             let btnClass = 'bg-slate-950 text-slate-500 border-slate-900 hover:text-slate-300';
                             
                             if (isSelected) {
