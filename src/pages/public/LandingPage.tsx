@@ -826,14 +826,35 @@ export default function LandingPage({ onGoToLogin }: LandingPageProps) {
                     </div>
 
                     {/* Wali Kelas Card */}
-                    <div className="bg-slate-900/60 p-4 rounded-2xl border border-slate-800">
-                      <span className="text-[10px] text-slate-500 uppercase tracking-widest font-black block mb-1">GURU WALI KELAS</span>
-                      <span className="text-sm font-bold text-white block">
-                        {searchResult.class?.teacher?.name || 'Menunggu Wali Kelas'}
-                      </span>
-                      <span className="text-xs text-slate-400 block">
-                        NIP: {searchResult.class?.teacher?.nip || '-'}
-                      </span>
+                    <div className="bg-slate-900/60 p-4 rounded-2xl border border-slate-800 flex flex-col justify-between">
+                      <div>
+                        <span className="text-[10px] text-slate-500 uppercase tracking-widest font-black block mb-1">GURU WALI KELAS</span>
+                        <span className="text-sm font-bold text-white block">
+                          {searchResult.class?.teacher?.name || 'Menunggu Wali Kelas'}
+                        </span>
+                        {searchResult.class?.teacher?.phone ? (
+                          <span className="text-xs text-slate-400 block mt-0.5">
+                            HP/WA: {searchResult.class.teacher.phone}
+                          </span>
+                        ) : (
+                          <span className="text-xs text-slate-400 block">
+                            NIP: {searchResult.class?.teacher?.nip || '-'}
+                          </span>
+                        )}
+                      </div>
+                      {searchResult.class?.teacher?.phone && (
+                        <div className="mt-2.5">
+                          <a
+                            href={`https://wa.me/${searchResult.class.teacher.phone.replace(/^0/, '62').replace(/[^0-9]/g, '')}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="w-full py-2 bg-blue-600 hover:bg-blue-700 text-[10px] font-bold text-white rounded-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                          >
+                            <Phone className="w-3 h-3" />
+                            Hubungi Wali Kelas
+                          </a>
+                        </div>
+                      )}
                     </div>
 
                     {/* Kakak Binkel Card */}
@@ -1161,4 +1182,3 @@ export default function LandingPage({ onGoToLogin }: LandingPageProps) {
     </div>
   );
 }
-
