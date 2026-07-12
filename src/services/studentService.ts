@@ -59,7 +59,7 @@ export const studentService = {
     );
   },
 
-  async searchStudentByNisnAndDob(nisn: string, birthDate: string): Promise<Student | null> {
+  async searchStudentByNisn(nisn: string): Promise<Student | null> {
     const sanitizedNisn = nisn.trim();
     if (isSupabaseConfigured && supabase) {
       const { data, error } = await supabase
@@ -72,24 +72,23 @@ export const studentService = {
           )
         `)
         .eq('nisn', sanitizedNisn)
-        .eq('birth_date', birthDate)
         .is('deleted_at', null)
         .maybeSingle();
 
       if (error) {
-        console.warn('Supabase searchStudentByNisnAndDob error:', error);
-        return this.searchStudentByNisnAndDobLocal(sanitizedNisn, birthDate);
+        console.warn('Supabase searchStudentByNisn error:', error);
+        return this.searchStudentByNisnLocal(sanitizedNisn);
       }
       return data;
     }
-    return this.searchStudentByNisnAndDobLocal(sanitizedNisn, birthDate);
+    return this.searchStudentByNisnLocal(sanitizedNisn);
   },
 
-  searchStudentByNisnAndDobLocal(nisn: string, birthDate: string): Student | null {
+  searchStudentByNisnLocal(nisn: string): Student | null {
     const students = localDb.getStudents();
     return (
       students.find(
-        (s) => s.nisn === nisn && s.birth_date === birthDate
+        (s) => s.nisn === nisn
       ) || null
     );
   },
@@ -261,29 +260,34 @@ export const studentService = {
 
   async importStudentsBulk(studentsList: Omit<Student, 'id' | 'created_at' | 'updated_at'>[], adminEmail: string): Promise<void> {
     const timestamp = new Date().toISOString();
+    const preparedList = studentsList.map((s, index) => ({
+      ...s,
+      id: `s-imported-${Date.now()}-${index}-${Math.random().toString(36).substr(2, 4)}`,
+      created_at: timestamp,
+      updated_at: timestamp,
+    }));
 
     if (isSupabaseConfigured && supabase) {
       const { error } = await supabase
         .from('students')
-        .insert(studentsList);
+        .insert(preparedList);
 
       if (error) {
         console.warn('Supabase importStudentsBulk error:', error);
+        throw error;
       } else {
         localDb.addLog(adminEmail, 'Import Excel Siswa', `Berhasil mengimpor ${studentsList.length} siswa baru dari file Excel ke Cloud SQL.`);
+        
+        // Also keep local fallback synced
+        const currentStudents = localDb.getStudents();
+        const combined = [...currentStudents, ...preparedList];
+        localDb.saveStudents(combined);
         return;
       }
     }
 
     const currentStudents = localDb.getStudents();
-    const newStudents = studentsList.map((s, index) => ({
-      ...s,
-      id: `s-imported-${Date.now()}-${index}`,
-      created_at: timestamp,
-      updated_at: timestamp,
-    }));
-
-    const combined = [...currentStudents, ...newStudents];
+    const combined = [...currentStudents, ...preparedList];
     localDb.saveStudents(combined);
     localDb.addLog(adminEmail, 'Import Excel Siswa', `Berhasil mengimpor ${studentsList.length} siswa baru dari file Excel.`);
   }
