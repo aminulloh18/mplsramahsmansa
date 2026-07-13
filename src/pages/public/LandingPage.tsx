@@ -115,6 +115,7 @@ export default function LandingPage({ onGoToLogin }: LandingPageProps) {
 
   // Load initial data
   useEffect(() => {
+    document.title = 'Portal MPLS SMAN 1 Bandung';
     async function loadData() {
       try {
         const [annRes, faqRes, setRes] = await Promise.all([
@@ -125,6 +126,9 @@ export default function LandingPage({ onGoToLogin }: LandingPageProps) {
         setAnnouncements(annRes);
         setFaqs(faqRes);
         setSettings(setRes);
+        if (setRes?.school_name) {
+          document.title = `Portal MPLS ${setRes.school_name}`;
+        }
       } catch (error) {
         console.error('Failed to load landing page data', error);
       }
@@ -778,7 +782,7 @@ export default function LandingPage({ onGoToLogin }: LandingPageProps) {
                       </span>
                       <span className="text-[11px] text-slate-400 font-medium flex items-center gap-1.5 mt-2 pt-2 border-t border-slate-800/60">
                         <MapPin className="w-3.5 h-3.5 text-blue-500" />
-                        {searchResult.class?.room_number || '-'} <span className="text-slate-600">•</span> <span className="text-slate-300 font-bold">{searchResult.class?.name || '-'} (Sementara)</span>
+                        {searchResult.class?.room_number || '-'} <span className="text-slate-600">•</span> <span className="text-slate-300 font-bold">{searchResult.class?.name || '-'}</span>
                       </span>
                     </div>
 
