@@ -19,7 +19,7 @@ export default function PengaturanWebsite({ adminEmail }: PengaturanWebsiteProps
   const [schoolBanners, setSchoolBanners] = useState<string[]>([]);
   const [newBannerUrl, setNewBannerUrl] = useState('');
   const [mplsDate, setMplsDate] = useState('2026-07-13');
-  const [committeePhone, setCommitteePhone] = useState('08123456789');
+  const [committeePhone, setCommitteePhone] = useState('087778358755');
   const [guidebookUrl, setGuidebookUrl] = useState('');
   const [rulesUrl, setRulesUrl] = useState('');
   const [embedType, setEmbedType] = useState<'none' | 'youtube' | 'canva' | 'custom'>('none');
@@ -44,7 +44,7 @@ export default function PengaturanWebsite({ adminEmail }: PengaturanWebsiteProps
         if (data) {
           setSchoolName(data.school_name || 'SMAN 1 Bandung');
           setMplsDate(data.mpls_date || '2026-07-13');
-          setCommitteePhone(data.committee_phone || '08123456789');
+          setCommitteePhone(data.committee_phone || '087778358755');
           setGuidebookUrl(data.guidebook_url || '');
           setRulesUrl(data.rules_url || '');
           setSchoolLogo(data.school_logo || '');

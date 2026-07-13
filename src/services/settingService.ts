@@ -15,7 +15,11 @@ export const settingService = {
         console.warn('Supabase getSettings error:', error);
         return localDb.getSettings();
       }
-      return (data as Setting) || localDb.getSettings();
+      const settings = (data as Setting) || localDb.getSettings();
+      if (settings && (settings.committee_phone === '08123456789' || !settings.committee_phone)) {
+        settings.committee_phone = '087778358755';
+      }
+      return settings;
     }
     return localDb.getSettings();
   },
