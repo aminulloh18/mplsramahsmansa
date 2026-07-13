@@ -307,7 +307,7 @@ export const INITIAL_ANNOUNCEMENTS: Announcement[] = [
   {
     id: 'a-2',
     title: 'Panduan Pengisian Data & Gabung Grup WhatsApp Kelas X',
-    content: `Halo Peserta Didik Baru!\n\nUntuk mempermudah koordinasi selama MPLS, mohon ikuti langkah-langkah berikut setelah menemukan kelas Anda:\n\n1. Cari nama Anda di kolom pencarian di halaman utama menggunakan Nomor Pendaftaran atau NISN + Tanggal Lahir.\n2. Lihat nama regu, kelas, ruangan, dan nama Wali Kelas Anda.\n3. Klik tombol **Gabung Grup WhatsApp** yang tertera di kartu detail siswa Anda untuk langsung masuk ke WhatsApp Grup koordinasi kelas.\n4. Hubungi Wali Kelas jika Anda menemui kendala.\n\nSelamat bergabung di keluarga besar SMAN 1 Bandung!`,
+    content: `Halo Peserta Didik Baru!\n\nUntuk mempermudah koordinasi selama MPLS, mohon ikuti langkah-langkah berikut setelah menemukan kelas Anda:\n\n1. Cari nama Anda di kolom pencarian di halaman utama menggunakan Nomor NISN Anda.\n2. Lihat nama regu, kelas, ruangan, dan nama Wali Kelas Anda.\n3. Klik tombol **Gabung Grup WhatsApp** yang tertera di kartu detail siswa Anda untuk langsung masuk ke WhatsApp Grup koordinasi kelas.\n4. Hubungi Wali Kelas jika Anda menemui kendala.\n\nSelamat bergabung di keluarga besar SMAN 1 Bandung!`,
     status: 'Published',
     is_pinned: false,
     attachment_url: '#panduan-mpls',
@@ -329,7 +329,7 @@ export const INITIAL_FAQS: FAQ[] = [
   {
     id: 'faq-1',
     question: 'Bagaimana cara mengetahui kelas saya?',
-    answer: 'Silakan masukkan Nomor Pendaftaran Anda (format: MPLS-2026-XXX) atau kombinasikan NISN dan Tanggal Lahir Anda pada form pencarian di halaman depan. Sistem akan menampilkan nama regu, kelas, ruang, dan wali kelas Anda secara lengkap.',
+    answer: 'Silakan masukkan 10 digit Nomor NISN Anda pada form pencarian di halaman depan. Sistem akan menampilkan nama regu, kelas, ruang, dan wali kelas Anda secara lengkap.',
     order_num: 1,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
@@ -370,7 +370,7 @@ export const INITIAL_SETTINGS: Setting = {
     'https://images.unsplash.com/photo-1517486808906-6ca8b3f04846?auto=format&fit=crop&q=80&w=1200'
   ],
   mpls_date: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString(), // 5 hari lagi
-  committee_phone: '08123456789',
+  committee_phone: '087778358755',
   status_publish: true,
   color_theme: 'modern-bento',
   guidebook_url: '#',

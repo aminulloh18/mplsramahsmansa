@@ -86,7 +86,7 @@ export default function LandingPage({ onGoToLogin }: LandingPageProps) {
   const [currentSlide, setCurrentSlide] = useState(0);
   
   // Search state
-  const [activeTab, setActiveTab] = useState<'reg' | 'nisn'>('reg');
+  const [activeTab, setActiveTab] = useState<'reg' | 'nisn'>('nisn');
   const [regInput, setRegInput] = useState('');
   const [nisnInput, setNisnInput] = useState('');
   const [dobInput, setDobInput] = useState('');
@@ -391,82 +391,84 @@ export default function LandingPage({ onGoToLogin }: LandingPageProps) {
             };
 
             return (
-              <div className="relative group rounded-[2rem] overflow-hidden border border-slate-900 shadow-2xl aspect-[1200/630] bg-slate-950">
-                {/* Image Slide */}
-                <AnimatePresence mode="wait">
-                  <motion.div
-                    key={currentSlide}
-                    initial={{ opacity: 0, scale: 1.02 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.98 }}
-                    transition={{ duration: 0.5 }}
-                    className="absolute inset-0 w-full h-full"
-                  >
-                    <img
-                      src={banners[currentSlide]}
-                      alt={`Banner Slide ${currentSlide + 1}`}
-                      className="w-full h-full object-cover"
-                      referrerPolicy="no-referrer"
-                    />
-                    {/* Beautiful dark/brand gradient wash */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-[#020617] via-[#2d2f80]/30 to-black/30" />
-                  </motion.div>
-                </AnimatePresence>
+              <div className="space-y-4">
+                <div className="relative group rounded-[2rem] overflow-hidden border border-slate-900 shadow-2xl aspect-[1200/630] bg-slate-950">
+                  {/* Image Slide */}
+                  <AnimatePresence mode="wait">
+                    <motion.div
+                      key={currentSlide}
+                      initial={{ opacity: 0, scale: 1.02 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.98 }}
+                      transition={{ duration: 0.5 }}
+                      className="absolute inset-0 w-full h-full"
+                    >
+                      <img
+                        src={banners[currentSlide]}
+                        alt={`Banner Slide ${currentSlide + 1}`}
+                        className="w-full h-full object-cover"
+                        referrerPolicy="no-referrer"
+                      />
+                      {/* Subtler dark gradient to keep image clean */}
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent" />
+                    </motion.div>
+                  </AnimatePresence>
 
-                {/* Top border strip matching official school brand bar */}
-                <div className="absolute top-0 inset-x-0 h-2 bg-gradient-to-r from-school-magenta via-school-purple to-school-lime" />
+                  {/* Top border strip matching official school brand bar */}
+                  <div className="absolute top-0 inset-x-0 h-2 bg-gradient-to-r from-school-magenta via-school-purple to-school-lime" />
 
-                {/* Content Overlay */}
-                <div className="absolute inset-x-0 bottom-0 p-6 md:p-10 flex flex-col justify-end text-left">
-                  <div className="max-w-2xl space-y-2">
-                    <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-school-magenta/20 border border-school-magenta/30 rounded-full text-[9px] md:text-[10px] font-black text-school-magenta uppercase tracking-widest">
+                  {/* Slider Controls (Arrow Buttons on Hover) */}
+                  {banners.length > 1 && (
+                    <>
+                      <button
+                        onClick={prevSlide}
+                        className="absolute left-4 top-1/2 -translate-y-1/2 w-9 h-9 md:w-11 md:h-11 bg-black/40 hover:bg-school-blue/80 backdrop-blur-md text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all border border-white/10 hover:border-school-magenta cursor-pointer"
+                        title="Sebelumnya"
+                      >
+                        <ChevronLeft className="w-4 h-4 md:w-5 md:h-5" />
+                      </button>
+                      <button
+                        onClick={nextSlide}
+                        className="absolute right-4 top-1/2 -translate-y-1/2 w-9 h-9 md:w-11 md:h-11 bg-black/40 hover:bg-school-blue/80 backdrop-blur-md text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all border border-white/10 hover:border-school-magenta cursor-pointer"
+                        title="Berikutnya"
+                      >
+                        <ChevronRight className="w-4 h-4 md:w-5 md:h-5" />
+                      </button>
+
+                      {/* Indicator Dots */}
+                      <div className="absolute bottom-6 right-6 md:right-10 flex gap-1.5 z-20">
+                        {banners.map((_, idx) => (
+                          <button
+                            key={idx}
+                            onClick={() => setCurrentSlide(idx)}
+                            className={`w-1.5 h-1.5 md:w-2 md:h-2 rounded-full transition-all cursor-pointer ${
+                              idx === currentSlide
+                                ? 'bg-[#e2127a] w-5 md:w-7'
+                                : 'bg-white/30 hover:bg-white/50'
+                            }`}
+                            title={`Slide ${idx + 1}`}
+                          />
+                        ))}
+                      </div>
+                    </>
+                  )}
+                </div>
+
+                {/* Welcoming Text Section placed cleanly below the banner */}
+                <div className="p-6 md:p-8 bg-[#0F172A]/80 border border-slate-900 rounded-[2rem] shadow-xl text-left">
+                  <div className="max-w-3xl space-y-3">
+                    <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-school-magenta/10 border border-school-magenta/20 rounded-full text-[9px] md:text-[10px] font-black text-school-magenta uppercase tracking-widest">
                       <Sparkles className="w-3 h-3 text-school-magenta animate-pulse" />
                       Masa Pengenalan Lingkungan Sekolah (MPLS)
                     </div>
-                    <h2 className="text-xl md:text-4xl font-black text-white tracking-tight drop-shadow-md leading-none">
+                    <h2 className="text-2xl md:text-3xl font-black text-white tracking-tight leading-none bg-gradient-to-r from-white via-slate-200 to-slate-400 bg-clip-text text-transparent">
                       WILUJENG SUMPING!
                     </h2>
-                    <p className="text-[11px] md:text-sm text-slate-200 font-medium leading-relaxed drop-shadow-sm max-w-xl">
+                    <p className="text-xs md:text-sm text-slate-300 font-medium leading-relaxed max-w-2xl">
                       Selamat datang calon siswa baru di portal resmi <span className="text-school-lime font-black">{settings.school_name}</span>. Bersama-sama mari wujudkan masa depan yang unggul, kreatif, dan mandiri!
                     </p>
                   </div>
                 </div>
-
-                {/* Slider Controls (Arrow Buttons on Hover) */}
-                {banners.length > 1 && (
-                  <>
-                    <button
-                      onClick={prevSlide}
-                      className="absolute left-4 top-1/2 -translate-y-1/2 w-9 h-9 md:w-11 md:h-11 bg-black/40 hover:bg-school-blue/80 backdrop-blur-md text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all border border-white/10 hover:border-school-magenta cursor-pointer"
-                      title="Sebelumnya"
-                    >
-                      <ChevronLeft className="w-4 h-4 md:w-5 md:h-5" />
-                    </button>
-                    <button
-                      onClick={nextSlide}
-                      className="absolute right-4 top-1/2 -translate-y-1/2 w-9 h-9 md:w-11 md:h-11 bg-black/40 hover:bg-school-blue/80 backdrop-blur-md text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all border border-white/10 hover:border-school-magenta cursor-pointer"
-                      title="Berikutnya"
-                    >
-                      <ChevronRight className="w-4 h-4 md:w-5 md:h-5" />
-                    </button>
-
-                    {/* Indicator Dots */}
-                    <div className="absolute bottom-6 right-6 md:right-10 flex gap-1.5 z-20">
-                      {banners.map((_, idx) => (
-                        <button
-                          key={idx}
-                          onClick={() => setCurrentSlide(idx)}
-                          className={`w-1.5 h-1.5 md:w-2 md:h-2 rounded-full transition-all cursor-pointer ${
-                            idx === currentSlide
-                              ? 'bg-[#e2127a] w-5 md:w-7'
-                              : 'bg-white/30 hover:bg-white/50'
-                          }`}
-                          title={`Slide ${idx + 1}`}
-                        />
-                      ))}
-                    </div>
-                  </>
-                )}
               </div>
             );
           })()}
@@ -573,73 +575,28 @@ export default function LandingPage({ onGoToLogin }: LandingPageProps) {
               <h2 className="text-xl font-bold text-white">Cek Pembagian Kelas Anda</h2>
             </div>
             <p className="text-xs text-slate-400 mb-6">
-              Masukkan Nomor Pendaftaran (format: <code className="text-blue-400 font-mono">MPLS-2026-001</code>) atau Nomor NISN untuk memverifikasi alokasi regu & kelas Anda.
+              Masukkan Nomor NISN (10 digit) Anda untuk memverifikasi alokasi regu & kelas Anda secara instan.
             </p>
-
-            {/* TAB SELECTOR */}
-            <div className="flex bg-slate-950 p-1 rounded-xl mb-6 border border-slate-800 max-w-md">
-              <button
-                type="button"
-                onClick={() => setActiveTab('reg')}
-                className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all cursor-pointer ${
-                  activeTab === 'reg'
-                    ? 'bg-blue-600 text-white shadow'
-                    : 'text-slate-400 hover:text-slate-200'
-                }`}
-              >
-                Nomor Pendaftaran
-              </button>
-              <button
-                type="button"
-                onClick={() => setActiveTab('nisn')}
-                className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all cursor-pointer ${
-                  activeTab === 'nisn'
-                    ? 'bg-blue-600 text-white shadow'
-                    : 'text-slate-400 hover:text-slate-200'
-                }`}
-              >
-                Nomor NISN
-              </button>
-            </div>
 
             {/* SEARCH FORM INPUTS */}
             <form onSubmit={handleSearch} className="space-y-4">
-              {activeTab === 'reg' ? (
-                <div>
-                  <label className="block text-xs font-bold text-slate-400 mb-2">
-                    Nomor Pendaftaran Siswa
-                  </label>
-                  <div className="relative">
-                    <input
-                      type="text"
-                      required
-                      placeholder="Contoh: MPLS-2026-001"
-                      value={regInput}
-                      onChange={(e) => setRegInput(e.target.value)}
-                      className="w-full bg-slate-950/80 border border-slate-800 rounded-xl px-4 py-3 pl-11 text-sm text-white placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
-                    />
-                    <Search className="w-4 h-4 text-slate-600 absolute left-4 top-3.5" />
-                  </div>
+              <div>
+                <label className="block text-xs font-bold text-slate-400 mb-2">
+                  NISN Siswa (10 Digit)
+                </label>
+                <div className="relative">
+                  <input
+                    type="text"
+                    required
+                    maxLength={10}
+                    placeholder="Contoh: 0098765431"
+                    value={nisnInput}
+                    onChange={(e) => setNisnInput(e.target.value.replace(/\D/g, ''))}
+                    className="w-full bg-slate-950/80 border border-slate-800 rounded-xl px-4 py-3 pl-11 text-sm text-white placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                  />
+                  <Search className="w-4 h-4 text-slate-600 absolute left-4 top-3.5" />
                 </div>
-              ) : (
-                <div>
-                  <label className="block text-xs font-bold text-slate-400 mb-2">
-                    NISN Siswa (10 Digit)
-                  </label>
-                  <div className="relative">
-                    <input
-                      type="text"
-                      required
-                      maxLength={10}
-                      placeholder="Contoh: 0098765431"
-                      value={nisnInput}
-                      onChange={(e) => setNisnInput(e.target.value.replace(/\D/g, ''))}
-                      className="w-full bg-slate-950/80 border border-slate-800 rounded-xl px-4 py-3 pl-11 text-sm text-white placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
-                    />
-                    <Search className="w-4 h-4 text-slate-600 absolute left-4 top-3.5" />
-                  </div>
-                </div>
-              )}
+              </div>
 
               <button
                 type="submit"
@@ -971,28 +928,6 @@ export default function LandingPage({ onGoToLogin }: LandingPageProps) {
                       <ExternalLink className="w-4 h-4 text-slate-500 group-hover:text-emerald-400 transition-colors" />
                     </a>
                   </div>
-
-                  {/* Schedule */}
-                  <div className="mt-6 p-4 bg-blue-950/20 border border-blue-900/20 rounded-2xl">
-                    <h4 className="text-xs font-black text-blue-400 uppercase tracking-widest mb-2 flex items-center gap-2">
-                      <Calendar className="w-4 h-4" />
-                      Jadwal Penting Pembukaan MPLS SMAN 1 Bandung
-                    </h4>
-                    <ul className="text-xs text-slate-300 space-y-2 mt-2">
-                      <li className="flex justify-between border-b border-slate-800/40 pb-1.5">
-                        <span>Hari 1 (Senin): Upacara Pembukaan & Pengenalan Lingkungan</span>
-                        <span className="font-mono text-slate-400">07.00 - 13.00 WIB</span>
-                      </li>
-                      <li className="flex justify-between border-b border-slate-800/40 pb-1.5">
-                        <span>Hari 2 (Selasa): Pemaparan Kurikulum & Kurasi Karakter</span>
-                        <span className="font-mono text-slate-400">07.00 - 13.00 WIB</span>
-                      </li>
-                      <li className="flex justify-between pb-0.5">
-                        <span>Hari 3 (Rabu): Demonstrasi Ekstrakurikuler & Penutupan</span>
-                        <span className="font-mono text-slate-400">07.00 - 14.30 WIB</span>
-                      </li>
-                    </ul>
-                  </div>
                 </div>
               </div>
             </motion.div>
@@ -1011,7 +946,7 @@ export default function LandingPage({ onGoToLogin }: LandingPageProps) {
               <h3 className="text-lg font-bold text-white mb-2">Data Tidak Ditemukan</h3>
               <p className="text-xs text-slate-400 leading-relaxed mb-6">
                 Maaf, pencarian dengan informasi yang Anda masukkan tidak menghasilkan data pembagian kelas.
-                Harap periksa kembali penulisan <strong>Nomor Pendaftaran</strong> atau <strong>NISN</strong> Anda.
+                Harap periksa kembali penulisan <strong>NISN</strong> Anda.
               </p>
               
               <div className="flex flex-col sm:flex-row gap-3 justify-center">
@@ -1028,7 +963,7 @@ export default function LandingPage({ onGoToLogin }: LandingPageProps) {
                   Coba Cari Lagi
                 </button>
                 <a
-                  href={`https://wa.me/${settings?.committee_phone || '08123456789'}`}
+                  href={`https://wa.me/${settings?.committee_phone || '087778358755'}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="px-5 py-2.5 bg-rose-600/10 border border-rose-500/20 text-rose-400 rounded-xl text-xs font-bold hover:bg-rose-600/20 transition-all flex items-center justify-center gap-1.5"
@@ -1166,12 +1101,13 @@ export default function LandingPage({ onGoToLogin }: LandingPageProps) {
               Jika Anda menemui masalah dalam pembagian kelas atau pencarian data, mohon hubungi sekretariat panitia:
             </p>
             <p className="mt-2 font-bold text-blue-400">
-              Hotline WA: {settings?.committee_phone || '08123456789'}
+              Hotline WA: {settings?.committee_phone || '087778358755'}
             </p>
           </div>
           <div className="text-left md:text-right">
             <h5 className="font-bold text-slate-300 text-sm mb-3">Motto SMAN 1 Bandung</h5>
-            <p className="italic">"Berkarakter, Unggul, dan Berbudaya Lingkungan"</p>
+            <p className="font-bold text-slate-200 tracking-wider">"BERSATU"</p>
+            <p className="text-[11px] text-slate-400 mt-1">Berilmu – Santun – Agamis – Tekun – Unggul</p>
             <p className="mt-4 text-[10px] text-slate-600">
               © {new Date().getFullYear()} SMAN 1 Bandung. All Rights Reserved. <br />
               Portal MPLS engineered with Local Hybrid Storage.
