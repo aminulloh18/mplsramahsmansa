@@ -42,6 +42,9 @@ export default function BinkelDashboard({ session, onLogout }: BinkelDashboardPr
   const [bb, setBb] = useState<string>('');
   const [heartRate, setHeartRate] = useState<string>('');
   const [flexibility, setFlexibility] = useState<string>('');
+  const [flexTrial1, setFlexTrial1] = useState<string>('');
+  const [flexTrial2, setFlexTrial2] = useState<string>('');
+  const [flexTrial3, setFlexTrial3] = useState<string>('');
 
   // Auto-calculated IMT preview in modal
   const [imtPreview, setImtPreview] = useState<{ value: number; status: string } | null>(null);
@@ -204,6 +207,9 @@ export default function BinkelDashboard({ session, onLogout }: BinkelDashboardPr
     setBb(student.bb ? student.bb.toString() : '');
     setHeartRate(student.heart_rate ? student.heart_rate.toString() : '');
     setFlexibility(student.flexibility ? student.flexibility.toString() : '');
+    setFlexTrial1(student.flexibility_trial1 ? student.flexibility_trial1.toString() : '');
+    setFlexTrial2(student.flexibility_trial2 ? student.flexibility_trial2.toString() : '');
+    setFlexTrial3(student.flexibility_trial3 ? student.flexibility_trial3.toString() : '');
     setIsModalOpen(true);
   };
 
@@ -216,13 +222,22 @@ export default function BinkelDashboard({ session, onLogout }: BinkelDashboardPr
       const w = parseFloat(bb);
       const h = parseFloat(tb);
       const hr = parseInt(heartRate);
-      const flex = parseFloat(flexibility);
+      
+      const t1 = parseFloat(flexTrial1);
+      const t2 = parseFloat(flexTrial2);
+      const t3 = parseFloat(flexTrial3);
+      
+      const validTrials = [t1, t2, t3].filter(t => !isNaN(t));
+      const flexBest = validTrials.length > 0 ? Math.max(...validTrials) : null;
 
       const updates: Partial<Student> = {
         tb: isNaN(h) ? null : h,
         bb: isNaN(w) ? null : w,
         heart_rate: isNaN(hr) ? null : hr,
-        flexibility: isNaN(flex) ? null : flex,
+        flexibility: flexBest,
+        flexibility_trial1: isNaN(t1) ? null : t1,
+        flexibility_trial2: isNaN(t2) ? null : t2,
+        flexibility_trial3: isNaN(t3) ? null : t3,
         imt: imtPreview ? imtPreview.value : null,
         imt_status: imtPreview ? imtPreview.status : null,
       };
@@ -631,11 +646,11 @@ export default function BinkelDashboard({ session, onLogout }: BinkelDashboardPr
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {/* Denyut Jantung */}
                 <div>
                   <label className="block text-[10px] font-bold text-slate-400 mb-1.5 uppercase tracking-wider">
-                    Denyut Jantung
+                    Denyut Jantung (15 Detik)
                   </label>
                   <div className="relative">
                     <input
@@ -650,22 +665,65 @@ export default function BinkelDashboard({ session, onLogout }: BinkelDashboardPr
                   </div>
                 </div>
 
-                {/* Fleksibilitas */}
-                <div>
-                  <label className="block text-[10px] font-bold text-slate-400 mb-1.5 uppercase tracking-wider">
-                    Fleksibilitas
-                  </label>
-                  <div className="relative">
+                {/* Info Nadi multiplied */}
+                <div className="bg-slate-950/60 p-3 rounded-2xl border border-slate-900/60 flex flex-col justify-center">
+                  <span className="block text-[9px] font-black text-rose-400 uppercase">Perkiraan Nadi (1 Menit)</span>
+                  <span className="text-xs font-mono font-bold text-slate-300 mt-0.5">
+                    {heartRate ? `${parseInt(heartRate) * 4} bpm` : '-'}
+                  </span>
+                </div>
+              </div>
+
+              {/* Fleksibilitas (3 trials) */}
+              <div className="space-y-2">
+                <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                  Uji Fleksibilitas (Sit & Reach - 3 Kali)
+                </label>
+                <div className="grid grid-cols-1 sm:grid-cols-4 gap-3 bg-slate-950/40 p-4 rounded-2xl border border-slate-900">
+                  <div>
+                    <span className="block text-[9px] font-bold text-slate-500 mb-1">Raihan 1 (cm)</span>
                     <input
                       type="number"
                       step="any"
                       placeholder="0"
-                      value={flexibility}
-                      onChange={(e) => setFlexibility(e.target.value)}
-                      className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2 pl-9 text-xs text-white focus:outline-none focus:ring-1 focus:ring-pink-500"
+                      value={flexTrial1}
+                      onChange={(e) => setFlexTrial1(e.target.value)}
+                      className="w-full bg-slate-950 border border-slate-800 rounded-xl px-2.5 py-1.5 text-xs text-white focus:outline-none focus:ring-1 focus:ring-pink-500"
                     />
-                    <Sparkles className="w-3.5 h-3.5 text-slate-600 absolute left-3 top-3" />
-                    <span className="text-[10px] text-slate-500 absolute right-3.5 top-3">cm</span>
+                  </div>
+                  <div>
+                    <span className="block text-[9px] font-bold text-slate-500 mb-1">Raihan 2 (cm)</span>
+                    <input
+                      type="number"
+                      step="any"
+                      placeholder="0"
+                      value={flexTrial2}
+                      onChange={(e) => setFlexTrial2(e.target.value)}
+                      className="w-full bg-slate-950 border border-slate-800 rounded-xl px-2.5 py-1.5 text-xs text-white focus:outline-none focus:ring-1 focus:ring-pink-500"
+                    />
+                  </div>
+                  <div>
+                    <span className="block text-[9px] font-bold text-slate-500 mb-1">Raihan 3 (cm)</span>
+                    <input
+                      type="number"
+                      step="any"
+                      placeholder="0"
+                      value={flexTrial3}
+                      onChange={(e) => setFlexTrial3(e.target.value)}
+                      className="w-full bg-slate-950 border border-slate-800 rounded-xl px-2.5 py-1.5 text-xs text-white focus:outline-none focus:ring-1 focus:ring-pink-500"
+                    />
+                  </div>
+                  <div className="bg-pink-500/5 px-3 py-2 rounded-xl border border-pink-500/10 flex flex-col justify-center">
+                    <span className="block text-[9px] font-black text-pink-400 uppercase">Raihan Terbaik</span>
+                    <span className="text-xs font-mono font-black text-white mt-0.5">
+                      {(() => {
+                        const t1 = parseFloat(flexTrial1);
+                        const t2 = parseFloat(flexTrial2);
+                        const t3 = parseFloat(flexTrial3);
+                        const valids = [t1, t2, t3].filter(t => !isNaN(t));
+                        return valids.length > 0 ? `${Math.max(...valids)} cm` : '-';
+                      })()}
+                    </span>
                   </div>
                 </div>
               </div>

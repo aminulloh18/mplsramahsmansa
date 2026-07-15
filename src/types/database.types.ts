@@ -59,6 +59,9 @@ export interface Student {
   bb?: number | null;
   heart_rate?: number | null;
   flexibility?: number | null;
+  flexibility_trial1?: number | null;
+  flexibility_trial2?: number | null;
+  flexibility_trial3?: number | null;
   imt?: number | null;
   imt_status?: string | null;
   graduation_status?: 'Lulus' | 'Tidak Lulus' | null;

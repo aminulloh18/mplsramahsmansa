@@ -15,9 +15,10 @@ import {
   Filter,
   Smile
 } from 'lucide-react';
-import { Student, Class } from '../../types/database.types';
+import { Student, Class, Setting } from '../../types/database.types';
 import { studentService } from '../../services/studentService';
 import { classService } from '../../services/classService';
+import { settingService } from '../../services/settingService';
 import * as XLSX from 'xlsx';
 
 // Helper structures and interpretation functions for School Analytics
@@ -217,6 +218,7 @@ interface AnalisisKebugaranProps {
 export default function AnalisisKebugaran({ adminEmail }: AnalisisKebugaranProps) {
   const [students, setStudents] = useState<Student[]>([]);
   const [classes, setClasses] = useState<Class[]>([]);
+  const [settings, setSettings] = useState<Setting | null>(null);
   const [loading, setLoading] = useState(true);
   
   const [searchQuery, setSearchQuery] = useState('');
@@ -256,12 +258,14 @@ export default function AnalisisKebugaran({ adminEmail }: AnalisisKebugaranProps
     async function loadData() {
       try {
         setLoading(true);
-        const [studList, classList] = await Promise.all([
+        const [studList, classList, setts] = await Promise.all([
           studentService.getStudents(),
-          classService.getClasses()
+          classService.getClasses(),
+          settingService.getSettings()
         ]);
         setStudents(studList);
         setClasses(classList);
+        setSettings(setts);
       } catch (err) {
         console.error('Error loading fitness analysis data:', err);
       } finally {
@@ -409,6 +413,113 @@ export default function AnalisisKebugaran({ adminEmail }: AnalisisKebugaranProps
     ];
 
     XLSX.writeFile(workbook, `REKAP_KEHADIRAN_KEBUGARAN_MPLS_${new Date().getFullYear()}.xlsx`);
+  };
+
+  // Export to Kemendikdasmen Karakter format (screenshot-compatible)
+  const handleExportLaporanKarakter = () => {
+    const currentYear = new Date().getFullYear();
+    const schoolNameValue = settings?.school_name || 'SMAN 1 Bandung';
+    const totalParticipants = filteredStudents.length;
+
+    // Build row-by-row array structure to match the screenshot exactly
+    const aoaData = [
+      // Row 1 (Index 0): Title
+      [`LAPORAN TES FLEKSIBILITAS MPLS RAMAH ${currentYear}`],
+      // Row 2 (Index 1): Empty
+      [],
+      // Row 3 (Index 2): Nama Sekolah
+      ["Nama Sekolah", ".................................................."],
+      // Row 4 (Index 3): NPSN
+      ["NPSN", ".................................................."],
+      // Row 5 (Index 4): Tanggal Pelaksanaan
+      ["Tanggal Pelaksanaan", "..................................................", "(format dd/mm/yyyy)"],
+      // Row 6 (Index 5): Jumlah Peserta
+      ["Jumlah Peserta", totalParticipants.toString(), "(hanya angka, contoh: 125)"],
+      // Row 7 (Index 6): Empty
+      [],
+      // Row 8 (Index 7): Catatan
+      ["Catatan:"],
+      // Row 9 (Index 8): *
+      ["*SILAKAN UNDUH FILE INI untuk diunggah melalui laman karakter.data.kemendikdasmen.go.id"],
+      // Row 10 (Index 9): **
+      ["**DILARANG mengubah menambah, atau mengurangi jumlah dan posisi kolom DAN DILARANG mengubah nama serta menambah Sheet baru di dokumen ini, karena akan mempengaruhi pembacaan oleh sistem. Anda diperbolehkan menambah jumlah baris data sesuai dengan jumlah murid yang mengikuti tes."],
+      // Row 11 (Index 10): ***
+      ["***Kelengkapan Data NISN, Nama Murid, dan Tanggal Lahir sangat penting untuk sistem mencocokkan data dengan Dapodik. Jika belum ada NISN, maka isi ... untuk mengarahkan sistem menggunakan Nama Murid dan Tanggal Lahir sebagai acuan."],
+      // Row 12 (Index 11): Empty
+      [],
+      // Row 13 (Index 12): Red alert label row
+      ["Kolom kolom ini tidak boleh diubah"],
+      // Row 14 (Index 13): Column Headers
+      [
+        "No.",
+        "NISN",
+        "Nama Murid",
+        "Tanggal Lahir (format dd/mm/yyyy)",
+        "Apakah Memiliki Disabilitas (Ya/Tidak)",
+        "Tinggi Badan",
+        "Berat Badan",
+        "VSit & Reach Raihan 1",
+        "VSit & Reach Raihan 2",
+        "VSit & Reach Raihan 3",
+        "VSit & Reach Raihan Terbaik"
+      ]
+    ];
+
+    // Add student records
+    filteredStudents.forEach((student, index) => {
+      let formattedBirthDate = '';
+      if (student.birth_date) {
+        const parts = student.birth_date.split('-');
+        if (parts.length === 3) {
+          formattedBirthDate = `${parts[2]}/${parts[1]}/${parts[0]}`; // dd/mm/yyyy
+        } else {
+          formattedBirthDate = student.birth_date;
+        }
+      }
+
+      aoaData.push([
+        (index + 1).toString(),
+        student.nisn || '...',
+        student.full_name,
+        formattedBirthDate || '...',
+        'Tidak', // default to 'Tidak'
+        student.tb ? student.tb.toString() : '...',
+        student.bb ? student.bb.toString() : '...',
+        student.flexibility_trial1 ? student.flexibility_trial1.toString() : (student.flexibility ? student.flexibility.toString() : '...'),
+        student.flexibility_trial2 ? student.flexibility_trial2.toString() : '...',
+        student.flexibility_trial3 ? student.flexibility_trial3.toString() : '...',
+        student.flexibility ? student.flexibility.toString() : '...'
+      ]);
+    });
+
+    const worksheet = XLSX.utils.aoa_to_sheet(aoaData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Laporan Fleksibilitas');
+
+    // Define column widths
+    worksheet['!cols'] = [
+      { wch: 6 },   // No.
+      { wch: 18 },  // NISN
+      { wch: 28 },  // Nama Murid
+      { wch: 22 },  // Tanggal Lahir
+      { wch: 25 },  // Disabilitas
+      { wch: 15 },  // Tinggi Badan
+      { wch: 15 },  // Berat Badan
+      { wch: 22 },  // Raihan 1
+      { wch: 22 },  // Raihan 2
+      { wch: 22 },  // Raihan 3
+      { wch: 22 }   // Terbaik
+    ];
+
+    // Merging cells
+    worksheet['!merges'] = [
+      // Title merge A1:K1 (Row 0, Col 0 to Col 10)
+      { s: { r: 0, c: 0 }, e: { r: 0, c: 10 } },
+      // Merge "Kolom kolom ini tidak boleh diubah" A13:K13 (Row 12, Col 0 to Col 10)
+      { s: { r: 12, c: 0 }, e: { r: 12, c: 10 } }
+    ];
+
+    XLSX.writeFile(workbook, `LAPORAN_TES_FLEKSIBILITAS_MPLS_RAMAH_${currentYear}.xlsx`);
   };
 
   return (
@@ -1489,16 +1600,25 @@ export default function AnalisisKebugaran({ adminEmail }: AnalisisKebugaranProps
         <div className="bg-[#0F172A] border border-slate-800 rounded-[2rem] p-6 shadow-xl space-y-4">
           <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
             <div>
-              <h3 className="text-sm font-bold text-white">Database Presensi & Kebugaran SMAN 1 Bandung</h3>
+              <h3 className="text-sm font-bold text-white">Database Presensi & Kebugaran {settings?.school_name || 'SMAN 1 Bandung'}</h3>
               <p className="text-xs text-slate-500">Hasil rekap input pendamping (binkel) untuk semua ruang kelas.</p>
             </div>
-            <button
-              onClick={handleExportExcel}
-              className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-xs font-bold text-white rounded-xl transition-all shadow-md shadow-emerald-500/10 cursor-pointer flex items-center gap-1.5"
-            >
-              <Download className="w-4 h-4" />
-              EKSPOR REKAP EXCEL
-            </button>
+            <div className="flex flex-wrap gap-2">
+              <button
+                onClick={handleExportLaporanKarakter}
+                className="px-4 py-2 bg-gradient-to-r from-pink-600 to-rose-600 hover:from-pink-700 hover:to-rose-700 text-xs font-black text-white rounded-xl transition-all shadow-md shadow-rose-500/10 cursor-pointer flex items-center gap-1.5"
+              >
+                <FileSpreadsheet className="w-4 h-4" />
+                FORMAT LAPORAN KEMENDIKDASMEN
+              </button>
+              <button
+                onClick={handleExportExcel}
+                className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-xs font-bold text-white rounded-xl transition-all shadow-md shadow-emerald-500/10 cursor-pointer flex items-center gap-1.5"
+              >
+                <Download className="w-4 h-4" />
+                EKSPOR REKAP UTUH
+              </button>
+            </div>
           </div>
 
           {/* Day selection tabs */}
@@ -1656,7 +1776,16 @@ export default function AnalisisKebugaran({ adminEmail }: AnalisisKebugaranProps
                           {s.heart_rate || s.flexibility ? (
                             <div className="flex flex-col items-center gap-0.5">
                               {s.heart_rate && <span>Nadi: <strong className="text-slate-200 font-mono">{s.heart_rate} bpm</strong></span>}
-                              {s.flexibility && <span>Lentur: <strong className="text-slate-200 font-mono">{s.flexibility} cm</strong></span>}
+                              {s.flexibility && (
+                                <div className="flex flex-col items-center">
+                                  <span>Lentur: <strong className="text-slate-200 font-mono">{s.flexibility} cm</strong></span>
+                                  {(s.flexibility_trial1 || s.flexibility_trial2 || s.flexibility_trial3) && (
+                                    <span className="text-[9px] text-slate-500 font-mono">
+                                      ({s.flexibility_trial1 || '-'}/{s.flexibility_trial2 || '-'}/{s.flexibility_trial3 || '-'})
+                                    </span>
+                                  )}
+                                </div>
+                              )}
                             </div>
                           ) : (
                             <span className="text-[10px] text-slate-600 italic">-</span>
