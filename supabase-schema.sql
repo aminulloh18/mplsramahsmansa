@@ -3,10 +3,14 @@
 
 -- =========================================================================
 -- MIGRASI KILAT (JALANKAN INI JIKA DATABASE SUDAH ADA / PRE-EXISTING):
--- Jika Anda sudah membuat tabel 'classes' sebelumnya dan hanya ingin mengubah
--- kolom "nama gedung" menjadi "nama regu" tanpa menghapus data, silakan
--- jalankan perintah di bawah ini saja di SQL Editor Supabase Anda:
+-- Jika Anda sudah memiliki database dan ingin menambahkan kolom uji fleksibilitas 3 kali,
+-- silakan jalankan perintah di bawah ini di SQL Editor Supabase Anda:
 --
+-- ALTER TABLE public.students ADD COLUMN IF NOT EXISTS flexibility_trial1 NUMERIC;
+-- ALTER TABLE public.students ADD COLUMN IF NOT EXISTS flexibility_trial2 NUMERIC;
+-- ALTER TABLE public.students ADD COLUMN IF NOT EXISTS flexibility_trial3 NUMERIC;
+--
+-- Jika Anda juga ingin mengubah kolom "nama gedung" menjadi "nama regu" tanpa menghapus data:
 -- ALTER TABLE public.classes RENAME COLUMN building TO regu;
 -- =========================================================================
 
@@ -74,6 +78,9 @@ CREATE TABLE public.students (
     bb NUMERIC,
     heart_rate INTEGER,
     flexibility NUMERIC,
+    flexibility_trial1 NUMERIC,
+    flexibility_trial2 NUMERIC,
+    flexibility_trial3 NUMERIC,
     imt NUMERIC,
     imt_status TEXT,
     graduation_status TEXT CHECK (graduation_status IN ('Lulus', 'Tidak Lulus')),
